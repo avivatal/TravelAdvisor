@@ -15,7 +15,7 @@ var connectionConfig = {
     userName: 'avivatal',
     password: 'At123456',
     server: 'traveladvisor.database.windows.net',
-    options: { encrypt: true, database: 'SHOP_SERVER' }
+    options: { encrypt: true, database: 'TravelAdvisorDataBase' }
 };
 
 //create the pool
@@ -24,7 +24,6 @@ var pool = new ConnectionPool(poolConfig, connectionConfig)
 pool.on('error', function (err) {
     if (err) {
         console.log(err);
-       
     }
 });
 console.log('pool connection on');

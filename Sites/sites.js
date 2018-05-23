@@ -1,6 +1,7 @@
 
 
-app.get('/Sites/',function(req,res){
+//get all sites
+app.get('/Sites',function(req,res){
     DButilsAzure.execQuery("SELECT * FROM Sites")
     .then(function(result){
         res.send(result)
@@ -8,22 +9,28 @@ app.get('/Sites/',function(req,res){
         console.log(err)
     })
 })
+
+//get sites by category
 app.get('Sites/:Category', function(req,res){
-    DButilsAzure.execQuery("SELECT * FROM Sites WHERE Category = '"+ req.body.Category +"'")
+    DButilsAzure.execQuery("SELECT * FROM Sites WHERE Category = '"+ req.bodyParser.Category +"'")
     .then(function(result){
         res.send(result)
     }).catch(function(err){
         console.log(err)
     })
 })
+
+// get users saved sites
 app.get('Sites/:Username', function(req,res){
-    DButilsAzure.execQuery("SELECT * FROM SavedSites WHERE Username = '"+ req.body.Username +"'")
+    DButilsAzure.execQuery("SELECT * FROM SavedSites WHERE Username = '"+ req.bodyParser.Username +"'")
     .then(function(result){
         res.send(result)
     }).catch(function(err){
         console.log(err)
     })
 })
+
+//get 3 popular random sites
 app.get('Sites/getPopulars/', function(req,res){
     DButilsAzure.execQuery("SELECT * FROM Sites WHERE Rating > 3")
     .then(function(result){
@@ -39,6 +46,26 @@ app.get('Sites/getPopulars/', function(req,res){
         }
         var ans = [result[random1],result[random2],result[random3]];
         res.send(ans)
+    }).catch(function(err){
+        console.log(err)
+    })
+})
+
+//get site
+app.get('/Sites/:Sitename',function(req,res){
+    DButilsAzure.execQuery("SELECT * FROM Sites WHERE Sitename = '"+req.bodyParser.Sitename+"'")
+    .then(function(result){
+        res.send(result)
+    }).catch(function(err){
+        console.log(err)
+    })
+})
+
+//save site for user
+app.post('/Sites/saveSite/:Username,Siteid',function(req,res){
+    DButilsAzure.execQuery("INSERT INTO Savedsites (Username,Siteid) VALUES ("+req.bodyParser.Username+", "+req.bodyParser.Siteid+")")
+    .then(function(result){
+        res.send(result)
     }).catch(function(err){
         console.log(err)
     })

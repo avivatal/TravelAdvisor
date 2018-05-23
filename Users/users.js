@@ -1,3 +1,5 @@
+
+//adduser
 app.post('/Users/',function(req,res){
     var Username = req.bodyParser.Username;
     var Firstname = req.bodyParser.Firstname;
@@ -22,8 +24,15 @@ app.post('/Users/',function(req,res){
     req.addParameter('Email',TYPES.NVarChar,Email);
     req.addParameter('Securityanswer',TYPES.NVarChar,SecurityAnswer);
 
-    DButilsAzure.execQuery(req);
+    DButilsAzure.execQuery(req)
+    .then(function(result){
+        res.send(result)
+    }).catch(function(err){
+        console.log(err)
+    })
 })
+
+//recover user password
 app.post('/Users/recoverPassword', function(req,res){
 
     var Username = req.bodyParser.Username;
@@ -40,5 +49,7 @@ app.post('/Users/recoverPassword', function(req,res){
         console.log(err)
     })
 })
-
-//app.post('/Users/login')
+//login user
+app.post('/Users/login', function(req,res){
+    ///token
+})
