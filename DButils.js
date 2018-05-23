@@ -12,9 +12,9 @@ var poolConfig = {
 };
 
 var connectionConfig = {
-    userName: 'my-ship-server',
-    password: 'abCD1234',
-    server: 'my-shop-server.database.windows.net',
+    userName: 'avivatal',
+    password: 'At123456',
+    server: 'traveladvisor.database.windows.net',
     options: { encrypt: true, database: 'SHOP_SERVER' }
 };
 
