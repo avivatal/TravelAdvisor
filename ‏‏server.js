@@ -12,14 +12,20 @@ app.use(bodyParser.json());
 
 
 //complete your code here
-
-
-
+app.route(`api`).get('Categories/getCategories',function(req,res){
+    DButilsAzure.execQuery("SELECT * FROM Categories")
+    .then(function(result){
+        res.send(result)
+    }).catch(function(err){
+        console.log(err)
+    })
+})
 
 var port = 3000;
 app.listen(port, function () {
     console.log('Example app listening on port ' + port);
 });
 //-------------------------------------------------------------------------------------------------------------------
+
 
 
