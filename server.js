@@ -11,8 +11,9 @@ app.use(cors());
 var DButilsAzure = require('./DButils');
 var Datetime = require('node-datetime');
 
-////////////////////////////////////users
+////////////////////////////////////users////////////////////////////////
 
+//get all users
 app.get('/Users', function(req,res){
     DButilsAzure.execQuery("SELECT * FROM Users")
     .then(function(result){
@@ -23,39 +24,63 @@ app.get('/Users', function(req,res){
 });
 
 
-//login user
+//login user: username,password
 app.post('/Users/login', function(req,res){
-    ///token
     DButilsAzure.execQuery("SELECT * FROM Users WHERE Username='"+req.body.Username+"' AND Password='"+req.body.Password+"'")
     .then(function(result){
-        res.send(result)
+        if(result.length > 0){//user exist
+            //create token
+            res.sendStatus(200)//OK
+        } else {
+            res.sendStatus(400)//error
+        }
     }).catch(function(err){
         console.log(err)
     })
 })
 
+//register new user
 app.post('/Users',function(req,res){
-    DButilsAzure.execQuery("INSERT INTO Users (Username,Password,Firstname,Lastname,City,Country,Email,Securityanswer) VALUES ('"+req.body.Username+"', '"+req.body.Password+"','"+req.body.Firstname+"', '"+req.body.Lastname+"', '"+req.body.City+"', '"+req.body.Country+"','"+req.body.Email+"', '"+req.body.SecurityAnswer+"')")
+    //check: username and password sentax, email, country
+    DButilsAzure.execQuery("SELECT * FROM Users WHERE Username = '"+req.body.Username+"')")
     .then(function(result){
-        res.send(result)
+        if(result.length == 0){//username not exist
+            DButilsAzure.execQuery("SELECT * FROM Users WHERE Password = '"+req.body.Password+"'")
+            .then(function(result){
+                if(result.length == 0){//password dosent exist{
+                    DButilsAzure.execQuery("INSERT INTO Users (Username,Password,Firstname,Lastname,City,Country,Email,Securityanswer) VALUES ('"+req.body.Username+"', '"+req.body.Password+"','"+req.body.Firstname+"', '"+req.body.Lastname+"', '"+req.body.City+"', '"+req.body.Country+"','"+req.body.Email+"', '"+req.body.SecurityAnswer+"')")
+                    .then(function(result){
+                        res.sendStatus(200)
+                    }).catch(function(err){
+                        console.log(err)
+                    })
+                } else {
+                    res.sendStatus(400)
+                }
+            }).catch(function(err){
+                console.log(err)
+            })
+        } else {
+            res.sendStatus(400)
+        }
     }).catch(function(err){
         console.log(err)
     })
 });
 
+//recover user password
 app.post('/Users/recoverPassword', function(req,res){
-
     var Username = req.body.Username;
     var ans = req.body.Securityanswer;
-    console.log(Username);
-    console.log(ans);
     DButilsAzure.execQuery("SELECT Password, Securityanswer FROM Users WHERE Username='"+Username+"'")
     .then(function(result){
+        if(result.length>0){
         if(verifySecurityAnswer(result,ans) === true){
-            res.send(result[0].Password)
-        }
-        else{
-            res.sendStatus(400)
+            res.send(result[0].Password)//recover password
+        } else {
+            res.sendStatus(400)//security answer not correct
+        }} else{
+            res.sendStatus(400)//username dossent exist
         }
     }).catch(function(err){
         console.log(err)
@@ -71,8 +96,9 @@ function verifySecurityAnswer(result,ans) {
 }
 
 
-/////////////////////////sites
+/////////////////////////sites//////////////////////////////
 
+//get all sites
 app.get('/Sites',function(req,res){
     DButilsAzure.execQuery("SELECT * FROM Sites")
     .then(function(result){
@@ -82,18 +108,28 @@ app.get('/Sites',function(req,res){
     })
 })
 
+//get sites by category
 app.get('/Sites/:Category', function(req,res){
-    console.log('test')
-    console.log(req.params.Category)
-    DButilsAzure.execQuery("SELECT * FROM Sites WHERE Category = '"+ req.params.Category +"'")
+    DButilsAzure.execQuery("SELECT * FROM Categories WHERE Category ='"+ req.params.Category +"'")
     .then(function(result){
-        res.send(result)
+        if(result.length > 0){
+            DButilsAzure.execQuery("SELECT * FROM Sites WHERE Category = '"+ req.params.Category +"'")
+            .then(function(result){
+                res.send(result)
+            }).catch(function(err){
+                console.log(err)
+            })
+        } else {
+            res.send(400);//category dosent exist
+        }
     }).catch(function(err){
         console.log(err)
     })
 });
 
+//get users saved sites
 app.get('/SavedSites/:Username', function(req,res){
+    //TOKEN
     DButilsAzure.execQuery("SELECT * FROM SavedSites WHERE Username = '"+ req.params.Username +"'")
     .then(function(result){
         res.send(result)
@@ -102,6 +138,7 @@ app.get('/SavedSites/:Username', function(req,res){
     })
 })
 
+//get random 3 popular sites
 app.get('/PopularSites', function(req,res){
     DButilsAzure.execQuery("SELECT * FROM Sites WHERE Rating >= 3")
     .then(function(result){
@@ -126,25 +163,9 @@ app.get('/PopularSites', function(req,res){
     })
 })
 
+//user save site
 app.post('/SavedSites/',function(req,res){
     /// Token
-  /*  DButilsAzure.execQuery("SELECT * FROM SavedSites WHERE Username='"+req.body.Username+"'")
-    .then(function(result){
-        if(result.length >= 2){
-            var sitename;
-            if(result[0].Date < result[1].Date){
-                sitename = result[0].Siteid;
-            }
-            else{
-                sitename = result[1].Siteid;
-            }
-            DButilsAzure.execQuery("DELETE FROM SavedSites WHERE Username='"+req.body.Username+"' AND Siteid='"+sitename+"'")
-            .then(function(result){
-                res.send(result)
-            }).catch(function(err){
-                console.log(err)
-            })
-        }*/
         var Date1 = Datetime.create().format("Y-m-d H:M:S");
         console.log(Date1);
         DButilsAzure.execQuery("INSERT INTO SavedSites (Username,Siteid,Date) VALUES ('"+req.body.Username+"', '"+req.body.Siteid+"','"+ Date1+"')")
@@ -153,14 +174,11 @@ app.post('/SavedSites/',function(req,res){
         }).catch(function(err){
             console.log(err)
         })
-      //  res.send
-   /* }).catch(function(err){
-        console.log(err)
-    })
-  */
 })
 
+//delete user saved sites
 app.delete('/SavedSites', function(req,res){
+    //TOKEN
     DButilsAzure.execQuery("DELETE FROM SavedSites WHERE Username = '"+ req.body.Username +"' AND Siteid='"+req.body.Siteid+"'")
     .then(function(result){
         res.send(result)
@@ -169,7 +187,9 @@ app.delete('/SavedSites', function(req,res){
     })
 })
 
+//rate site
 app.post('/RateSite',function(req,res){
+    //TOKEN
     DButilsAzure.execQuery("SELECT * FROM Sites WHERE Siteid = '"+ req.body.Siteid +"'")
     .then(function(result){
         var numberOfRatings = parseInt(result[0].NumberOfRatings)+1;
@@ -188,7 +208,9 @@ app.post('/RateSite',function(req,res){
     })
 })
 
+//review site
 app.post('/ReviewSite',function(req,res){
+    //TOKEN
     var Date1 = Datetime.create().format("Y-m-d H:M:S");
     DButilsAzure.execQuery("INSERT INTO SiteComments (Siteid,Comment,Date) VALUES ('"+parseInt(req.body.Siteid)+"', '"+req.body.Comment+"','"+Date1+"')")
     .then(function(result){
@@ -198,8 +220,9 @@ app.post('/ReviewSite',function(req,res){
     })
 });
 
-//////////////////categories
+//////////////////////////////categories////////////////////
 
+//get all categories
 app.get('/Categories',function(req,res){
     DButilsAzure.execQuery("SELECT * FROM Categories")
     .then(function(result){
@@ -209,11 +232,17 @@ app.get('/Categories',function(req,res){
     })
 });
 
+//get user categories
 app.get('/Categories/:Username',function(req,res){
-    DButilsAzure.execQuery("SELECT * FROM UserCategories WHERE Username='"+req.body.Username+"'")
+    DButilsAzure.execQuery("SELECT * FROM Users WHERE Username='"+req.body.Username+"'")
     .then(function(result){
-        res.send(result)
-    }).catch(function(err){
+        if(result.length > 0){
+        DButilsAzure.execQuery("SELECT * FROM UserCategories WHERE Username='"+req.body.Username+"'")
+        .then(function(result){
+            res.send(result)
+        }).catch(function(err){
+            console.log(err)
+        })    }}).catch(function(err){
         console.log(err)
     })
 });
