@@ -12,10 +12,11 @@ var jsonWebToken = require('jsonwebtoken');
 app.use(cors());
 var DButilsAzure = require('./DButils');
 var router = express.Router();
+var Datetime = require('node-datetime');
+
 
 //get users saved sites
 router.get('/SavedSites/', function(req,res){
-
     var token = req.decoded;
                 DButilsAzure.execQuery("SELECT * FROM SavedSites WHERE Username = '"+ token.username +"'")
                .then(function(result){
@@ -51,6 +52,17 @@ router.delete('/SavedSites', function(req,res){
     })
 })
 
+//update site priority
+router.post('/SavedSites/Priority',function(req,res){
+
+    var token = req.decoded;            
+                    DButilsAzure.execQuery("UPDATE SavedSites SET Priority='"+req.body.Priority+"' WHERE Username='"+token.username+"' AND Siteid='"+req.body.Siteid+"'")
+                    .then(function(result){
+                        res.send(result)
+                    }).catch(function(err){
+                        console.log(err)
+                    })
+            });
 
 //get user categories
 router.get('/Categories',function(req,res){

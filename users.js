@@ -16,7 +16,7 @@ var router = express.Router();
 var superSecret = "AdMatayi"
 
 
-//login user: username,password
+//login user
 router.post('/login', function(req,res){
     DButilsAzure.execQuery("SELECT * FROM Users WHERE Username='"+req.body.Username+"' AND Password='"+req.body.Password+"'")
     .then(function(result){
@@ -42,9 +42,9 @@ router.post('/login', function(req,res){
 
 //register new user
 router.post('/',function(req,res){
-    //check: username and password sentax, email, country
     var username = req.body.Username;
     var pass = req.body.Password;
+    var email = req.body.Email;
     var error = '';
     if(username.length < 3 || username.length > 8){
         error = 'Username must be between 3 and 8 characters ';
@@ -56,7 +56,11 @@ router.post('/',function(req,res){
         error += 'Username may contain only letters ';
     }
     if(! /^[a-zA-Z0-9]+$/.test(pass)){
-        error += 'Password may contain letters and numbers'
+        error += 'Password may contain letters and numbers '
+    }
+    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if(! re.test(String(email).toLowerCase())){
+        error += 'email is not in the rigth syntax '
     }
     if(error === ''){
        
@@ -66,7 +70,7 @@ router.post('/',function(req,res){
             DButilsAzure.execQuery("SELECT * FROM Users WHERE Password = '"+pass+"'")
             .then(function(result){
                 if(result.length == 0){//password dosent exist{
-                    DButilsAzure.execQuery("INSERT INTO Users (Username,Password,Firstname,Lastname,City,Country,Email,Securityanswer) VALUES ('"+username+"', '"+pass+"','"+req.body.Firstname+"', '"+req.body.Lastname+"', '"+req.body.City+"', '"+req.body.Country+"','"+req.body.Email+"', '"+req.body.SecurityAnswer+"')")
+                    DButilsAzure.execQuery("INSERT INTO Users (Username,Password,Firstname,Lastname,City,Country,Email,Securityanswer) VALUES ('"+username+"', '"+pass+"','"+req.body.Firstname+"', '"+req.body.Lastname+"', '"+req.body.City+"', '"+req.body.Country+"','"+email+"', '"+req.body.Securityanswer+"')")
                     .then(function(result){
                         res.sendStatus(200)
                     }).catch(function(err){
@@ -121,7 +125,7 @@ router.post('/recoverPassword', function(req,res){
 });
 
 function verifySecurityAnswer(result,ans) {
-    if(result[0].SecurityAnswer === ans)
+    if(result[0].Securityanswer === ans)
     {
         return true;
     }
@@ -184,9 +188,9 @@ router.get('/PopularSites', function(req,res){
 
 //rate site
 router.post('/RateSite',function(req,res){
-    //TOKEN
     DButilsAzure.execQuery("SELECT * FROM Sites WHERE Siteid = '"+ req.body.Siteid +"'")
     .then(function(result){
+        if(result.length >0){
         var numberOfRatings = parseInt(result[0].NumberOfRatings)+1;
         var rating =parseFloat(result[0].Rating);
         var newrate = (parseFloat(req.body.Rating) + (rating  * (numberOfRatings-1))) / (numberOfRatings);
@@ -198,14 +202,25 @@ router.post('/RateSite',function(req,res){
         }).catch(function(err){
             console.log(err)
         })
-    }).catch(function(err){
+    } else {
+        res.sendStatus(400);//site id dosent exist
+    }}).catch(function(err){
         console.log(err)
     })
 })
 
+router.post('/UpdateViews',function(req,res){
+    
+    DButilsAzure.execQuery("UPDATE Sites SET Views='"+req.body.Views+"' WHERE Siteid = '"+ req.body.Siteid +"'")
+    .then(function(result){
+        res.send(result)
+    }).catch(function(err){
+        console.log(err)
+    })
+});
+
 //review site
 router.post('/ReviewSite',function(req,res){
-    //TOKEN
     var Date1 = Datetime.create().format("Y-m-d H:M:S");
     DButilsAzure.execQuery("INSERT INTO SiteComments (Siteid,Comment,Date) VALUES ('"+parseInt(req.body.Siteid)+"', '"+req.body.Comment+"','"+Date1+"')")
     .then(function(result){
