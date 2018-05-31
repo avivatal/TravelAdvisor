@@ -35,7 +35,7 @@ router.post('/SavedSites/',function(req,res){
             
                     DButilsAzure.execQuery("INSERT INTO SavedSites (Username,Siteid,Date) VALUES ('"+token.username+"', '"+req.body.Siteid+"','"+ Date1+"')")
                     .then(function(result){
-                        res.send(result)
+                        res.sendStatus(200)
                     }).catch(function(err){
                         console.log(err)
                     })
@@ -46,7 +46,7 @@ router.delete('/SavedSites', function(req,res){
     var token = req.decoded;
     DButilsAzure.execQuery("DELETE FROM SavedSites WHERE Username = '"+ token.username +"' AND Siteid='"+req.body.Siteid+"'")
     .then(function(result){
-        res.send(result)
+        res.sendStatus(200)
     }).catch(function(err){
         console.log(err)
     })
@@ -58,7 +58,7 @@ router.post('/SavedSites/Priority',function(req,res){
     var token = req.decoded;            
                     DButilsAzure.execQuery("UPDATE SavedSites SET Priority='"+req.body.Priority+"' WHERE Username='"+token.username+"' AND Siteid='"+req.body.Siteid+"'")
                     .then(function(result){
-                        res.send(result)
+                        res.sendStatus(200)
                     }).catch(function(err){
                         console.log(err)
                     })
@@ -81,5 +81,14 @@ router.get('/Categories',function(req,res){
     })
 
 });
+router.post('/Categories',function(req,res){
 
+    var token = req.decoded;
+                    DButilsAzure.execQuery("INSERT INTO UserCategories (Username,Category) VALUES ('"+token.username+"', '"+req.body.Category+"')")
+                    .then(function(result){
+                        res.sendStatus(200)
+                    }).catch(function(err){
+                        console.log(err)
+                    })
+            });
 module.exports = router

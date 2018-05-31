@@ -15,14 +15,14 @@ var DButilsAzure = require('./DButils');
 var Datetime = require('node-datetime');
 var authen = require('./authen')
 var authenActions = require('./authenActions')
-var users = require('./users')
+var guests = require('./guests')
 
 ////////////////////////////////////users////////////////////////////////
 
-app.use('/users', users)
+//app.use('/guests/sites/:Category', guests.get('/sites/:Category'))
+app.use('/guests', guests)
 app.use('/authen', authen)
 app.use('/authen/Actions', authenActions)
-
 
 var port = 8080;
 app.listen(port, function () {

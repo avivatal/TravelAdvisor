@@ -14,6 +14,8 @@ app.use(cors());
 var DButilsAzure = require('./DButils');
 var router = express.Router();
 var superSecret = "AdMatayi"
+var Datetime = require('node-datetime');
+
 
 
 //login user
@@ -104,6 +106,15 @@ router.get('/', function(req,res){
     })
 });
 
+//get users saved sites
+router.get('/getSiteComments/:Siteid', function(req,res){
+                DButilsAzure.execQuery("SELECT * FROM SiteComments WHERE Siteid = '"+ req.params.Siteid +"'")
+               .then(function(result){
+                res.send(result)
+            }).catch(function(err){
+                console.log(err)
+    });
+});
 
 //recover user password
 router.post('/recoverPassword', function(req,res){
@@ -132,22 +143,14 @@ function verifySecurityAnswer(result,ans) {
     return false;
 }
 
-//get all sites
-router.get('/Sites',function(req,res){
-    DButilsAzure.execQuery("SELECT * FROM Sites")
-    .then(function(result){
-        res.send(result)
-    }).catch(function(err){
-        console.log(err)
-    })
-})
+
 
 //get sites by category
 router.get('/Sites/:Category', function(req,res){
-    DButilsAzure.execQuery("SELECT * FROM Categories WHERE Category ='"+ req.params.Category +"'")
+    DButilsAzure.execQuery("SELECT * FROM Categories WHERE Category ='"+req.params.Category+"'")
     .then(function(result){
         if(result.length > 0){
-            DButilsAzure.execQuery("SELECT * FROM Sites WHERE Category = '"+ req.params.Category +"'")
+            DButilsAzure.execQuery("SELECT * FROM Sites WHERE Category ='"+ req.params.Category +"'")
             .then(function(result){
                 res.send(result)
             }).catch(function(err){
@@ -161,10 +164,22 @@ router.get('/Sites/:Category', function(req,res){
     })
 });
 
+//get all sites
+router.get('/Sites',function(req,res){
+    DButilsAzure.execQuery("SELECT * FROM Sites")
+    .then(function(result){
+        res.send(result)
+    }).catch(function(err){
+        console.log(err)
+    })
+})
 //get random 3 popular sites
 router.get('/PopularSites', function(req,res){
     DButilsAzure.execQuery("SELECT * FROM Sites WHERE Rating >= 3")
     .then(function(result){
+        if(result.length == 0){
+            res.sendStatus(400)
+        } else {
         var size=result.length;
         var random1=Math.floor(Math.random()*size);
         var random2=Math.floor(Math.random()*size);
@@ -181,6 +196,7 @@ router.get('/PopularSites', function(req,res){
 
         var ans = [result[random1],result[random2],result[random3]];
         res.send(ans)
+    }
     }).catch(function(err){
         console.log(err)
     })
@@ -194,11 +210,10 @@ router.post('/RateSite',function(req,res){
         var numberOfRatings = parseInt(result[0].NumberOfRatings)+1;
         var rating =parseFloat(result[0].Rating);
         var newrate = (parseFloat(req.body.Rating) + (rating  * (numberOfRatings-1))) / (numberOfRatings);
-
         console.log(newrate)
         DButilsAzure.execQuery("UPDATE Sites SET Rating='"+newrate+"',NumberOfRatings='"+numberOfRatings+"' WHERE Siteid = '"+ req.body.Siteid +"'")
         .then(function(result){
-            res.send(result)
+            res.sendStatus(200)
         }).catch(function(err){
             console.log(err)
         })
@@ -210,10 +225,17 @@ router.post('/RateSite',function(req,res){
 })
 
 router.post('/UpdateViews',function(req,res){
-    
-    DButilsAzure.execQuery("UPDATE Sites SET Views='"+req.body.Views+"' WHERE Siteid = '"+ req.body.Siteid +"'")
+    DButilsAzure.execQuery("SELECT Views FROM Sites WHERE Siteid = '"+ req.body.Siteid +"'")
     .then(function(result){
-        res.send(result)
+        if(result.length > 0){
+            var views = parseInt(result[0].Views);
+            DButilsAzure.execQuery("UPDATE Sites SET Views='"+(views+1)+"' WHERE Siteid = '"+ req.body.Siteid +"'")
+            .then(function(result){
+                res.sendStatus(200)
+            }).catch(function(err){
+                console.log(err)
+            })
+        }
     }).catch(function(err){
         console.log(err)
     })
@@ -224,7 +246,7 @@ router.post('/ReviewSite',function(req,res){
     var Date1 = Datetime.create().format("Y-m-d H:M:S");
     DButilsAzure.execQuery("INSERT INTO SiteComments (Siteid,Comment,Date) VALUES ('"+parseInt(req.body.Siteid)+"', '"+req.body.Comment+"','"+Date1+"')")
     .then(function(result){
-        res.send(result)
+        res.sendStatus(200)
     }).catch(function(err){
         console.log(err)
     })
@@ -239,5 +261,6 @@ router.get('/Categories',function(req,res){
         console.log(err)
     })
 });
+
 
 module.exports = router
